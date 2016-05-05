@@ -54,26 +54,6 @@ def new_result():
     return get_response(str(item.key.id()), 201)
   return get_response('create error', 500)
 
-@app.route('/corrections', methods=['GET'])
-def corrections():
-  list = models.Correction.query().order(-models.Correction.created_at).fetch(100)
-  return render_template('corrections.html', list=list)
-
-@app.route('/corrections', methods=['POST'])
-def new_correction():
-  for key in ['deviceId', 'input', 'output', 'learned', 'suggest']:
-    if not request.form[key]:
-      return get_response('bad request', 400)
-  item = models.Correction()
-  item.device_id = request.form['deviceId']
-  item.input = request.form['input']
-  item.output = request.form['output']
-  item.learned = request.form['learned'] == 'true'
-  item.suggest = request.form['suggest']
-  if item.put():
-    return get_response('saved', 201)
-  return get_response('error', 500)
-
 @app.route('/')
 def hello():
     """Return a friendly HTTP greeting."""
