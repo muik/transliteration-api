@@ -1,14 +1,21 @@
 from flask import Flask, request, render_template, Response, jsonify
 import models
 import logging
+import auth
+
 app = Flask(__name__)
 
 @app.route('/results', methods=['GET'])
+@auth.requires_admin
 def results():
+  if request.url_root == 'http://localhost:10080/':
+    host = 'http://0.0.0.0:8080'
+  else:
+    host = 'https://transliterator.herokuapp.com'
   list = models.Result.query().order(-models.Result.updated_at).fetch(100)
-  return render_template('results.html', list=list)
+  return render_template('results.html', list=list, host=host)
 
-def get_response(text, status):
+def get_response(text, status=200):
   response = Response(text, status)
   if request.url_root == 'http://localhost:10080/':
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -17,6 +24,26 @@ def get_response(text, status):
   else:
     response.headers['Access-Control-Allow-Origin'] = 'http://transliterator.herokuapp.com'
   return response
+
+@app.route('/results/<string:id>/suggests/<string:suggest>', methods=['DELETE'])
+@auth.requires_admin
+def remove_suggest(id, suggest):
+  item = models.Result.get_by_id(long(id))
+  if not item:
+    return get_response('Not found result', 404)
+  item.suggests = [v for v in item.suggests if v != suggest]
+  if item.put():
+    return get_response('Deleted')
+  return get_response('Error', 500)
+
+@app.route('/results/<string:id>', methods=['DELETE'])
+@auth.requires_admin
+def delete_result(id):
+  item = models.Result.get_by_id(long(id))
+  if not item:
+    return get_response('Not Found')
+  item.key.delete()
+  return get_response('Deleted')
 
 @app.route('/results/<string:id>/suggests', methods=['POST'])
 def update_result(id):
