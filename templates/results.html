@@ -1,5 +1,5 @@
 <ul>
 {% for item in list %}
-  <li>{{ item.input }} - {{ item.output }} - {{ item.learned }}</li>
+  <li>{{ item.input }} {{ item.learned }} - {{ item.output }} - {{ ', '.join(item.common_suggests()) }}</li>
 {% endfor %}
 </ul>
