@@ -12,8 +12,10 @@ def get_response(text, status):
   response = Response(text, status)
   if request.url_root == 'http://localhost:10080/':
     response.headers['Access-Control-Allow-Origin'] = '*'
+  elif request.url_root.startswith('https:'):
+    response.headers['Access-Control-Allow-Origin'] = 'https://transliterator.herokuapp.com'
   else:
-    response.headers['Access-Control-Allow-Origin'] = 'transliterator.herokuapp.com'
+    response.headers['Access-Control-Allow-Origin'] = 'http://transliterator.herokuapp.com'
   return response
 
 @app.route('/results/<string:id>/suggests', methods=['POST'])
@@ -36,18 +38,24 @@ def new_result():
   for key in ['deviceId', 'input', 'output', 'learned']:
     if not request.form[key] or not request.form[key].strip():
       return get_response('bad request', 400)
+  device_id = request.form['deviceId'].strip()
   input = request.form['input'].strip()
+  input_lower = input.lower()
   output = request.form['output'].strip()
   learned = request.form['learned'] == 'true'
-  item = models.Result.query(models.Result.input == input, models.Result.output == output, models.Result.learned == learned).get()
+  item = models.Result.query(models.Result.input == input_lower,
+      models.Result.output == output, models.Result.learned == learned).get()
   if item:
+    item.append_device_id(device_id)
+    item.append_input(input)
     item.hits += 1
     if item.put():
       return get_response(str(item.key.id()), 200)
     return get_response('update error', 500)
   item = models.Result()
-  item.device_id = request.form['deviceId'].strip()
-  item.input = input
+  item.device_ids = [device_id]
+  item.inputs = [input]
+  item.input = input_lower
   item.output = output
   item.learned = learned
   if item.put():
