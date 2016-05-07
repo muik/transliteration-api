@@ -18,10 +18,14 @@
     <![endif]-->
   </head>
   <body>
-    <h1>Results</h1>
+  <div class="container">
+    <h1><a href="/results">Results</a></h1>
+    <a href="?suggests=0">미제안</a>
+    <a href="?suggests=1">제안</a>
     <table class="table">
     {% for item in list %}
       <tr>
+        <td>{{ item.common_device_id()[:5] }} ({{ item.device_ids|length }})</td>
         <td>{% if not item.learned %} <small>(미학습)</small>{% endif %}</td>
         <td><a href="{{ host }}/?input={{ item.common_input() }}" target="_blank">{{ item.common_input() }}</a></td>
         <td>{{ item.output }}</td>
@@ -32,10 +36,12 @@
           {% endfor %}
           </ul>
         </td>
+        <td>{{ item.updated_at and item.updated_at.strftime('%Y-%m-%d %H:%m') }}</td>
         <td><button class="btn delete" value="{{ item.key.id() }}">삭제</button></td>
       </tr>
     {% endfor %}
     </table>
+  </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
     <script>

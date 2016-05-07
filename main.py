@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, Response, jsonify
 import models
 import logging
 import auth
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -14,6 +15,18 @@ def txt_results():
     results.append('%s\t%s' % (item.common_input(), item.common_suggest()))
   return '\n'.join(results)
 
+@app.route('/migrate', methods=['GET'])
+@auth.requires_admin
+def migrate():
+  list = models.Result.query().order(models.Result.updated_at).fetch(10000)
+  for item in list:
+    if item.has_suggests():
+      item.suggested_at = item.updated_at
+    else:
+      item.suggested_at = None
+    item.put()
+  return get_response('ok')
+
 @app.route('/results', methods=['GET'])
 @auth.requires_admin
 def results():
@@ -21,7 +34,16 @@ def results():
     host = 'http://0.0.0.0:8080'
   else:
     host = 'https://transliterator.herokuapp.com'
-  list = models.Result.query().order(-models.Result.updated_at).fetch(100)
+  options = {}
+  suggests_option = request.args.get('suggests')
+  if suggests_option == '1':
+    q = models.Result.query(models.Result.suggested_at != None).order(-models.Result.suggested_at)
+  elif suggests_option == '0':
+    q = models.Result.query(models.Result.suggested_at == None).order(-models.Result.updated_at)
+  else:
+    q = models.Result.query().order(-models.Result.updated_at)
+
+  list = q.fetch(300)
   return render_template('results.html', list=list, host=host)
 
 def get_response(text, status=200):
@@ -40,7 +62,7 @@ def remove_suggest(id, suggest):
   item = models.Result.get_by_id(long(id))
   if not item:
     return get_response('Not found result', 404)
-  item.suggests = [v for v in item.suggests if v != suggest]
+  item.remove_suggest(suggest)
   if item.put():
     return get_response('Deleted')
   return get_response('Error', 500)
@@ -62,9 +84,7 @@ def update_result(id):
   if not suggest:
     return get_response('bad request', 400)
   item = models.Result.get_by_id(long(id))
-  if not item.suggests:
-    item.suggests = []
-  item.suggests.append(suggest)
+  item.append_suggest(suggest)
   if item.put():
     return get_response(str(item.key.id()), 200)
   return get_response('error', 500)
