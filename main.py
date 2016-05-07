@@ -5,6 +5,15 @@ import auth
 
 app = Flask(__name__)
 
+@app.route('/results.txt', methods=['GET'])
+@auth.requires_admin
+def txt_results():
+  results = []
+  list = models.Result.query_having_suggests().fetch(10000)
+  for item in list:
+    results.append('%s\t%s' % (item.common_input(), item.common_suggest()))
+  return '\n'.join(results)
+
 @app.route('/results', methods=['GET'])
 @auth.requires_admin
 def results():

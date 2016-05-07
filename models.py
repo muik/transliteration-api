@@ -13,6 +13,10 @@ class Result(ndb.Model):
   created_at = ndb.DateTimeProperty(auto_now_add=True)
   updated_at = ndb.DateTimeProperty(auto_now=True)
 
+  @classmethod
+  def query_having_suggests(cls):
+    return cls.query(cls.suggests != None)
+
   def append_input(self, input):
     if self.inputs == None:
       self.inputs = []
@@ -32,7 +36,12 @@ class Result(ndb.Model):
       return self.input
     return Counter(self.inputs).most_common(1)[0][0]
 
-  def common_suggests(self):
+  def common_suggest(self):
+    if not self.suggests:
+      return None
+    return Counter(self.suggests).most_common(1)[0][0]
+
+  def common_suggests(self, limit=5):
     if not self.suggests:
       return []
-    return [item[0] for item in Counter(self.suggests).most_common(5)]
+    return [item[0] for item in Counter(self.suggests).most_common(limit)]
