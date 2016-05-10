@@ -39,10 +39,11 @@ class Result(ndb.Model):
   def append_suggest(self, suggest):
     if not self.suggests:
       self.suggests = []
-    self.suggests.append(suggest)
+    self.suggests.append(suggest.strip())
     self.suggested_at = datetime.now()
 
   def remove_suggest(self, suggest):
+    suggest = suggest.strip()
     self.suggests = [v for v in self.suggests if v != suggest]
     if not self.has_suggests():
       self.suggested_at = None

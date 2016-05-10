@@ -50,7 +50,7 @@
         var suggest = btn.siblings('.suggest').text();
         var id = btn.val();
         $.ajax({
-          url: '/results/' + id + '/suggests/' + suggest,
+          url: '/results/' + id + '/suggests/' + encodeURIComponent(suggest),
           method: 'DELETE'
         }).done(function() {
           btn.closest('li').remove();
