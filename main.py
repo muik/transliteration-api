@@ -3,8 +3,15 @@ import models
 import logging
 import auth
 from datetime import datetime
+import pytz
 
 app = Flask(__name__)
+
+@app.template_filter('localtime')
+def localtime(time):
+  timezoneLocal = pytz.timezone('Asia/Seoul')
+  utc = pytz.utc
+  return utc.localize(time).astimezone(timezoneLocal)
 
 @app.route('/results.txt', methods=['GET'])
 @auth.requires_admin

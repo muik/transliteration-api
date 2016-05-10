@@ -36,7 +36,7 @@
           {% endfor %}
           </ul>
         </td>
-        <td>{{ item.updated_at and item.updated_at.strftime('%Y-%m-%d %H:%m') }}</td>
+        <td>{{ item.updated_at and (item.updated_at|localtime).strftime('%Y-%m-%d %H:%m') }}</td>
         <td><button class="btn delete" value="{{ item.key.id() }}">삭제</button></td>
       </tr>
     {% endfor %}
