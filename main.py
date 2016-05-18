@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template, Response, jsonify
-import models
-import logging
-import auth
 from datetime import datetime
+import logging
+from google.appengine.ext import ndb
+from flask import Flask, request, render_template, Response
 import pytz
+import models
+import auth
 
 app = Flask(__name__)
 
@@ -41,9 +42,13 @@ def results():
     host = 'http://0.0.0.0:8080'
   else:
     host = 'https://transliterator.herokuapp.com'
+  keyword = request.args.get('q')
   options = {}
   suggests_option = request.args.get('suggests')
-  if suggests_option == '1':
+  if keyword:
+    keyword = keyword.strip()
+    q = models.Result.query(ndb.OR(models.Result.inputs == keyword, models.Result.output == keyword, models.Result.suggests == keyword))
+  elif suggests_option == '1':
     q = models.Result.query(models.Result.suggested_at != None).order(-models.Result.suggested_at)
   elif suggests_option == '0':
     q = models.Result.query(models.Result.suggested_at == None).order(-models.Result.updated_at)
@@ -51,7 +56,7 @@ def results():
     q = models.Result.query().order(-models.Result.updated_at)
 
   list = q.fetch(300)
-  return render_template('results.html', list=list, host=host)
+  return render_template('results.html', list=list, host=host, q=keyword)
 
 def get_response(text, status=200):
   response = Response(text, status)

@@ -22,6 +22,10 @@
     <h1><a href="/results">Results</a></h1>
     <a href="?suggests=0">미제안</a>
     <a href="?suggests=1">제안</a>
+    <form action="/results" method="GET">
+      <input type="text" name="q" value="{{ q or '' }}" />
+      <input type="submit" />
+    </form>
     <table class="table">
     {% for item in list %}
       <tr>
