@@ -31,7 +31,7 @@
       <tr>
         <td>{{ item.common_device_id()[:5] }} ({{ item.device_ids|length }})</td>
         <td>{% if not item.learned %} <small>(미학습)</small>{% endif %}</td>
-        <td><a href="{{ host }}/?input={{ item.common_input() }}" target="_blank">{{ item.common_input() }}</a></td>
+        <td><a href="{{ host }}/#{{ item.common_input() }}" target="_blank">{{ item.common_input() }}</a></td>
         <td>{{ item.output }}</td>
         <td>
           <ul>
